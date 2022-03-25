@@ -1,0 +1,43 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: gke-wordpress-back
+  namespace: leadguru-wordpress-prod
+  labels:
+    type: lgt-cron-jobs
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  schedule: 30 2 * * *
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          containers:
+          - name: gke-wordpress-back
+            image: gcr.io/lead-tool-generator/gke-wordpress-back:latest
+            env:
+            - name: MYSQL_HOST
+              value: leadguru-wordpress-prod-mariadb
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: mariadb-password
+                  name: leadguru-wordpress-prod-mariadb
+            - name: MYSQL_DATABASE
+              value: bitnami_wordpress
+            - name: MYSQL_USER
+              value: bn_wordpress
+            - name: GKE_CLUSTER_NAME
+              value: lgt-prod
+            - name: GKE_CLUSTER_ZONE
+              value: us-central1-a
+            - name: GKE_CLUSTER_PROJECT
+              value: lead-tool-generator
+            - name: GCP_BUCKET_NAME
+              value: lgt_wordpress_backups
+            - name: K8S_WORDPRESS_NAMESPACE
+              value: leadguru-wordpress-prod
+            - name: K8S_WORDPRESS_SELECTOR
+              value: "app.kubernetes.io/name=wordpress"
